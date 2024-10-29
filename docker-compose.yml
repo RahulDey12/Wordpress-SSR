@@ -1,0 +1,51 @@
+services:
+  wordpress:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: t2s-wp-6.6.2-php8.3
+    ports:
+      - '80:80'
+    volumes:
+      - './wordpress/:/var/www/html'
+    depends_on:
+      - db
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: password
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_DEBUG: true
+    user: '1000'
+    networks:
+      - wp
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  db:
+    image: docker.io/bitnami/mariadb:10.6
+    volumes:
+      - 'db:/bitnami/mariadb'
+    environment:
+      - MARIADB_USER=wordpress
+      - MARIADB_PASSWORD=password
+      - MARIADB_ROOT_PASSWORD=password
+      - MARIADB_DATABASE=wordpress
+    user: '1000'
+    ports:
+      - '3306:3306'
+    networks:
+      - wp
+  mailpit:
+    image: 'axllent/mailpit:latest'
+    ports:
+      - '1025:1025'
+      - '8025:8025'
+    networks:
+      - wp
+networks:
+  wp:
+    driver: bridge
+volumes:
+  db:
+    driver: local
